@@ -268,14 +268,18 @@ class App {
           <div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
             <div style="font-size: 6rem; filter: drop-shadow(0 8px 16px rgba(239, 68, 68, 0.4));">🏆</div>
           </div>
-          <h1 id="heroTitle" style="font-size: 4rem; font-weight: 900; color: rgba(234, 179, 8, 1); margin: 0 0 0.75rem 0; letter-spacing: -1px; transform-origin: center center; transition: transform 0.05s linear, opacity 0.05s linear;">
-            ${this.selectedYear} Awards
-          </h1>
-          <p style="font-size: 1.375rem; color: rgba(239, 68, 68, 0.9); margin: 0 0 2rem 0; font-weight: 300; letter-spacing: 0.5px;">
-            Celebrating Excellence in the Wixcelo Community
-          </p>
-          
-          <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+        </div>
+
+        <!-- Title Section - Scales independently -->
+        <h1 id="heroTitle" style="font-size: 4rem; font-weight: 900; color: rgba(234, 179, 8, 1); text-align: center; margin: -2rem 0 0.75rem 0; letter-spacing: -1px; transform-origin: center top;">
+          ${this.selectedYear} Awards
+        </h1>
+        
+        <p style="font-size: 1.375rem; color: rgba(239, 68, 68, 0.9); margin: 0 0 2rem 0; font-weight: 300; letter-spacing: 0.5px; text-align: center;">
+          Celebrating Excellence in the Wixcelo Community
+        </p>
+        
+        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-bottom: 3rem;">
             <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
               <p style="font-size: 0.875rem; color: rgba(229, 231, 235, 0.6); text-transform: uppercase; letter-spacing: 1px; margin: 0;">Event Date</p>
               ${this.adminManager.isAdmin ? `
@@ -297,7 +301,6 @@ class App {
               <p style="font-size: 1.5rem; color: rgba(234, 179, 8, 1); font-weight: bold; margin: 0;">Wixcelo</p>
             </div>
           </div>
-        </div>
 
         ${this.adminManager.isAdmin ? `
         <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1)); border: 2px dashed rgba(239, 68, 68, 0.5); border-radius: 1rem; padding: 1.5rem; margin-bottom: 3rem; text-align: center;">
