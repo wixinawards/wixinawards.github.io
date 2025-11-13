@@ -125,11 +125,22 @@ class App {
     window.addEventListener('scroll', () => {
       const scrollY = window.scrollY;
       const heroSection = document.getElementById('heroSection');
+      const heroTitle = document.getElementById('heroTitle');
       
       if (heroSection) {
         // Hero: MUCH SLOWER floating effect (0.15 instead of 0.4)
         const heroLift = scrollY * 0.15;
         heroSection.style.transform = `translateY(-${heroLift}px)`;
+      }
+
+      // Title scaling - shrinks as you scroll away
+      if (heroTitle) {
+        // Max scroll before title is fully small is around 400px
+        const scrollProgress = Math.min(scrollY / 400, 1);
+        // Scale from 1 (100%) down to 0.5 (50%)
+        const titleScale = Math.max(0.5, 1 - scrollProgress * 0.5);
+        heroTitle.style.transform = `scale(${titleScale})`;
+        heroTitle.style.opacity = Math.max(0.3, 1 - scrollProgress * 0.7);
       }
 
       // Award cards - MUCH SLOWER effects that last longer
@@ -253,7 +264,7 @@ class App {
           <div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
             <div style="font-size: 6rem; filter: drop-shadow(0 8px 16px rgba(239, 68, 68, 0.4));">🏆</div>
           </div>
-          <h1 style="font-size: 4rem; font-weight: 900; color: rgba(234, 179, 8, 1); margin: 0 0 0.75rem 0; letter-spacing: -1px;">
+          <h1 id="heroTitle" style="font-size: 4rem; font-weight: 900; color: rgba(234, 179, 8, 1); margin: 0 0 0.75rem 0; letter-spacing: -1px; transform-origin: center center; transition: transform 0.05s linear, opacity 0.05s linear;">
             ${this.selectedYear} Awards
           </h1>
           <p style="font-size: 1.375rem; color: rgba(239, 68, 68, 0.9); margin: 0 0 2rem 0; font-weight: 300; letter-spacing: 0.5px;">
