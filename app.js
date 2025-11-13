@@ -127,12 +127,12 @@ class App {
       const heroSection = document.getElementById('heroSection');
       
       if (heroSection) {
-        // Hero: Simple but visible floating effect
-        const heroLift = scrollY * 0.4;
+        // Hero: MUCH SLOWER floating effect (0.15 instead of 0.4)
+        const heroLift = scrollY * 0.15;
         heroSection.style.transform = `translateY(-${heroLift}px)`;
       }
 
-      // Award cards - Simplified but VERY VISIBLE effects
+      // Award cards - MUCH SLOWER effects that last longer
       const cards = document.querySelectorAll('[data-card-index]');
       cards.forEach((card, index) => {
         const rect = card.getBoundingClientRect();
@@ -144,17 +144,17 @@ class App {
           const distFromCenter = Math.abs(cardCenter - window.innerHeight / 2);
           const visibility = Math.max(0, 1 - (distFromCenter / (window.innerHeight / 2)));
           
-          // 1. FLOATING - Moves up significantly
-          const float = scrollY * 0.3;
+          // 1. FLOATING - SLOW upward movement (0.08 instead of 0.3)
+          const float = scrollY * 0.08;
           
-          // 2. SCALING - Gets bigger as you scroll past it
-          const scale = 1 + visibility * 0.25;
+          // 2. SCALING - Gets bigger as you scroll past it (reduced from 0.25)
+          const scale = 1 + visibility * 0.15;
           
-          // 3. ROTATION - Spins as you scroll
-          const rotation = scrollY * 0.5;
+          // 3. ROTATION - SLOW spin (0.15 instead of 0.5 - 3x slower)
+          const rotation = scrollY * 0.15;
           
           // 4. TILT - 3D perspective tilt
-          const tilt = (visibility - 0.5) * 20;
+          const tilt = (visibility - 0.5) * 12;
           
           // Apply transforms
           card.style.transform = `
@@ -164,8 +164,8 @@ class App {
             rotateX(${tilt}deg)
           `;
           
-          // 5. OPACITY - Fade effect
-          card.style.opacity = Math.min(1, 0.7 + visibility * 0.3);
+          // 5. OPACITY - Subtle fade effect
+          card.style.opacity = Math.min(1, 0.8 + visibility * 0.2);
         }
       });
     }, { passive: true });
