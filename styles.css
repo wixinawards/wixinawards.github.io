@@ -108,7 +108,8 @@ nav {
 }
 
 .logo-section img {
-  filter: brightness(2) saturate(0) invert(1);
+  filter: invert(1) grayscale(0.3) brightness(1.15);
+  mix-blend-mode: screen;
 }
 
 .logo-text h1 {
