@@ -144,7 +144,6 @@ class App {
         // Apply both scale and opacity directly
         heroTitle.style.transform = `scale(${titleScale})`;
         heroTitle.style.opacity = opacity;
-        console.log('Title scale:', titleScale, 'Opacity:', opacity, 'ScrollY:', scrollY); // Debug log
       }
 
       // Award cards - MUCH SLOWER effects that last longer
@@ -264,14 +263,14 @@ class App {
         <!-- Content -->
         <div class="content">
         <!-- Premium Hero -->
-        <div style="text-align: center; margin-bottom: 4rem; padding: 3rem 0;" id="heroSection" class="parallax-hero">
+        <div style="text-align: center; margin-bottom: 0; padding: 3rem 0;" id="heroSection" class="parallax-hero">
           <div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
             <div style="font-size: 6rem; filter: drop-shadow(0 8px 16px rgba(239, 68, 68, 0.4));">🏆</div>
           </div>
         </div>
 
         <!-- Title Section - Scales independently -->
-        <h1 id="heroTitle" style="font-size: 4rem; font-weight: 900; color: rgba(234, 179, 8, 1); text-align: center; margin: -2rem 0 0.75rem 0; letter-spacing: -1px; transform-origin: center top;">
+        <h1 id="heroTitle" style="font-size: 4rem; font-weight: 900; color: rgba(234, 179, 8, 1); text-align: center; margin: 0 0 0.75rem 0; letter-spacing: -1px; transform-origin: center top; transition: transform 0.05s linear, opacity 0.05s linear;">
           ${this.selectedYear} Awards
         </h1>
         
