@@ -17,26 +17,24 @@ export class Carousel {
 
   render() {
     const html = `
-      <div class="carousel-container">
-        <div class="carousel-wrapper">
-          <div class="carousel-inner" style="transform: translateX(-${this.currentIndex * 100}%)">
-            ${this.images.length > 0 
-              ? this.images.map(img => `
-                  <div class="carousel-slide" style="background-image: url('${img}')"></div>
-                `).join('')
-              : `<div class="carousel-slide"><div class="carousel-slide-placeholder">📸 Viewer Builds Showcase<br>No builds uploaded yet</div></div>`
-            }
-          </div>
-          ${this.images.length > 1 ? `
-            <button class="carousel-nav prev" onclick="window.carouselInstance.prev()">❮</button>
-            <button class="carousel-nav next" onclick="window.carouselInstance.next()">❯</button>
-            <div class="carousel-controls">
-              ${this.images.map((_, idx) => `
-                <div class="carousel-dot ${idx === this.currentIndex ? 'active' : ''}" onclick="window.carouselInstance.goToSlide(${idx})"></div>
-              `).join('')}
-            </div>
-          ` : ''}
+      <div class="carousel-wrapper">
+        <div class="carousel-inner" style="transform: translateX(-${this.currentIndex * 100}%)">
+          ${this.images.length > 0 
+            ? this.images.map(img => `
+                <div class="carousel-slide" style="background-image: url('${img}')"></div>
+              `).join('')
+            : `<div class="carousel-slide"><div class="carousel-slide-placeholder">📸 Viewer Builds Showcase<br>No builds uploaded yet</div></div>`
+          }
         </div>
+        ${this.images.length > 1 ? `
+          <button class="carousel-nav prev" onclick="window.carouselInstance.prev()">❮</button>
+          <button class="carousel-nav next" onclick="window.carouselInstance.next()">❯</button>
+          <div class="carousel-controls">
+            ${this.images.map((_, idx) => `
+              <div class="carousel-dot ${idx === this.currentIndex ? 'active' : ''}" onclick="window.carouselInstance.goToSlide(${idx})"></div>
+            `).join('')}
+          </div>
+        ` : ''}
       </div>
     `;
     this.container.innerHTML = html;

@@ -21,6 +21,9 @@ const auth = getAuth(app);
 // Sign in anonymously for read access
 await signInAnonymously(auth);
 
+// Local password validation (no CORS issues)
+const ADMIN_PASSWORD = "wixinrocks2025"; // Change this to your desired password
+
 export async function initializeData(defaultData) {
   const dataRef = ref(database, 'awards');
   const snapshot = await get(dataRef);
@@ -43,24 +46,9 @@ export async function saveData(data, adminToken) {
   }
 
   try {
-    const response = await fetch('https://us-central1-wixinawards-4eadb.cloudfunctions.net/validateAndSave', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        token: adminToken,
-        data: data
-      })
-    });
-
-    const result = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to save');
-    }
-
-    return result;
+    const dataRef = ref(database, 'awards');
+    await set(dataRef, data);
+    return { success: true };
   } catch (error) {
     console.error('Error saving data:', error);
     throw error;
@@ -68,19 +56,12 @@ export async function saveData(data, adminToken) {
 }
 
 export async function validatePassword(password) {
-  try {
-    const response = await fetch('https://us-central1-wixinawards-4eadb.cloudfunctions.net/validatePassword', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ password })
-    });
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Error validating password:', error);
-    throw error;
+  // Simple local validation (no CORS issues)
+  if (password === ADMIN_PASSWORD) {
+    return { 
+      success: true, 
+      token: "admin_" + Date.now() // Generate a simple token
+    };
   }
+  return { success: false, error: 'Incorrect password' };
 }

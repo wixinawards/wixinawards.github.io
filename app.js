@@ -1,6 +1,5 @@
 // Main application logic
 import { initializeData, loadData } from './firebase.js';
-import { Carousel } from './carousel.js';
 import { AdminManager } from './admin.js';
 
 const defaultData = {
@@ -98,7 +97,6 @@ class App {
   constructor() {
     this.selectedYear = '2025';
     this.adminManager = new AdminManager();
-    this.carousel = null;
     this.allData = null;
   }
 
@@ -118,11 +116,29 @@ class App {
   setupParallax() {
     window.addEventListener('scroll', () => {
       const scrollY = window.scrollY;
-      const layer2 = document.querySelector('.parallax-layer.layer-2');
-      const layer3 = document.querySelector('.parallax-layer.layer-3');
+      const heroSection = document.querySelector('.hero');
+      const trophy = document.querySelector('.trophy-container');
+      const parallaxBg = document.getElementById('carousel-container');
       
-      if (layer2) layer2.style.setProperty('--parallax-offset-2', `${scrollY * 0.3}px`);
-      if (layer3) layer3.style.setProperty('--parallax-offset-3', `${scrollY * 0.5}px`);
+      if (parallaxBg) {
+        // Background parallax - moves slower
+        parallaxBg.style.transform = `translateY(${scrollY * 0.5}px) scale(${1 + scrollY * 0.0005})`;
+      }
+      
+      if (heroSection) {
+        // Hero scales down as you scroll
+        const scale = Math.max(0.7, 1 - scrollY * 0.0015);
+        const opacity = Math.max(0.3, 1 - scrollY * 0.003);
+        heroSection.style.transform = `scale(${scale})`;
+        heroSection.style.opacity = opacity;
+      }
+      
+      if (trophy) {
+        // Trophy moves up and scales
+        const trophyMove = scrollY * 0.3;
+        const trophyScale = Math.min(1.3, 1 + scrollY * 0.0008);
+        trophy.style.transform = `translateY(-${trophyMove}px) scale(${trophyScale})`;
+      }
     });
   }
 
@@ -166,6 +182,9 @@ class App {
         </div>
       </div>
 
+      <!-- Parallax Base Layer -->
+      <div class="parallax-layer base" id="carousel-container"></div>
+
       <!-- Navigation -->
       <nav>
         <div class="container">
@@ -201,18 +220,15 @@ class App {
         </div>
       </nav>
 
-      <!-- Parallax Background -->
-      <div class="parallax-layer layer-1"></div>
-      <div class="parallax-layer layer-2"></div>
-      <div class="parallax-layer layer-3"></div>
-
       <!-- Content -->
       <div class="content">
+        <!-- Trophy at Top -->
+        <div class="trophy-container">
+          <div style="font-size: 8rem;">🏆</div>
+        </div>
+
         <!-- Hero Section -->
         <div class="hero">
-          <svg class="hero-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
           <h2>${this.selectedYear} Wixin Awards</h2>
           <p>Celebrating the Wixcelo Community</p>
           <div class="hero-info">
@@ -223,16 +239,11 @@ class App {
               <span>${currentYearData.eventDate}</span>
             </div>
             <div class="hero-info-item">
-              <svg class="hero-info-icon" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path>
-              </svg>
+              <span style="color: #dc2626; font-size: 1.25rem;">▶️</span>
               <span>Hosted by Wixcelo</span>
             </div>
           </div>
         </div>
-
-        <!-- Carousel Section -->
-        <div id="carousel-container"></div>
 
         ${this.adminManager.isAdmin ? `
         <div class="admin-dashboard">
@@ -348,9 +359,6 @@ class App {
     `;
 
     document.getElementById('app').innerHTML = html;
-    
-    // Initialize carousel after rendering
-    this.carousel = new Carousel('carousel-container', sampleBuildImages);
   }
 
   toggleYearDropdown() {
