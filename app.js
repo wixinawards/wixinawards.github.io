@@ -108,7 +108,6 @@ class App {
   async init() {
     await initializeData(defaultData);
     loadData((data) => this.onDataLoaded(data));
-    this.setupParallax();
     this.setupEventListeners();
   }
 
@@ -116,11 +115,15 @@ class App {
     this.allData = data;
     this.adminManager.setCurrentData(data);
     this.render();
+    // Setup parallax AFTER render so elements exist
+    this.setupParallax();
   }
 
   setupParallax() {
     // Disable parallax on mobile for better performance
     if (window.innerWidth < 768) return;
+    
+    console.log('Parallax setup - element exists:', !!document.getElementById('heroTitle'));
     
     window.addEventListener('scroll', () => {
       const scrollY = window.scrollY;
@@ -135,15 +138,16 @@ class App {
 
       // Title scaling - shrinks as you scroll away
       if (heroTitle) {
-        // Max scroll before title is fully small is around 400px
-        const scrollProgress = Math.min(scrollY / 400, 1);
-        // Scale from 1 (100%) down to 0.5 (50%)
-        const titleScale = Math.max(0.5, 1 - scrollProgress * 0.5);
-        const opacity = Math.max(0.3, 1 - scrollProgress * 0.7);
-        
-        // Apply both scale and opacity directly
-        heroTitle.style.transform = `scale(${titleScale})`;
-        heroTitle.style.opacity = opacity;
+        if (scrollY < 100) {
+          heroTitle.style.fontSize = '4rem';
+          heroTitle.style.opacity = '1';
+        } else if (scrollY < 300) {
+          heroTitle.style.fontSize = '2.5rem';
+          heroTitle.style.opacity = '0.7';
+        } else {
+          heroTitle.style.fontSize = '1.5rem';
+          heroTitle.style.opacity = '0.4';
+        }
       }
 
       // Award cards - MUCH SLOWER effects that last longer
