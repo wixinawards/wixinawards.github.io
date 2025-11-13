@@ -820,3 +820,24 @@ footer p {
     display: none;
   }
 }
+
+/* Hero mobile optimization */
+@media (max-width: 768px) {
+  .hero-mobile {
+    padding: 1rem 0 0.5rem 0 !important;
+  }
+  
+  .hero-mobile img {
+    height: 60px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-mobile {
+    padding: 0.75rem 0 0.5rem 0 !important;
+  }
+  
+  .hero-mobile img {
+    height: 50px !important;
+  }
+}

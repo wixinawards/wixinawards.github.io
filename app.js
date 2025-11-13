@@ -223,15 +223,13 @@ class App {
         <!-- Content -->
         <div class="content">
         <!-- Premium Hero -->
-        <div style="text-align: center; margin-bottom: 0; padding: 3rem 0;" id="heroSection" class="parallax-hero">
-          <div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
-            <div style="font-size: 6rem; filter: drop-shadow(0 8px 16px rgba(239, 68, 68, 0.4));">🏆</div>
+        <div style="text-align: center; margin-bottom: 0; padding: 1.5rem 0 1rem 0;" id="heroSection" class="parallax-hero hero-mobile">
+          <div style="display: flex; justify-content: center; margin-bottom: 0.75rem;">
+            <img src="image.png" style="height: 80px; width: auto; filter: drop-shadow(0 8px 16px rgba(239, 68, 68, 0.4));" alt="Trophy">
           </div>
         </div>
         <!-- Title Section - Scales independently and becomes sticky -->
-        <h1 id="heroTitle" style="font-size: 4rem; font-weight: 900; color: rgba(234, 179, 8, 1); text-align: center; margin: 0 0 0.75rem 0; letter-spacing: -1px; transform-origin: center center; transition: transform 0.05s linear, opacity 0.05s linear; will-change: transform, position;">
-          ${this.selectedYear} Awards
-        </h1>
+        <h1 id="heroTitle" style="font-size: 4rem; font-weight: 900; color: rgba(234, 179, 8, 1); text-align: center; margin: 0 0 0.75rem 0; letter-spacing: -1px; transform-origin: center center; transition: transform 0.05s linear, opacity 0.05s linear; will-change: transform, position;">${this.selectedYear} Awards</h1>
         
         <p style="font-size: 1.375rem; color: rgba(239, 68, 68, 0.9); margin: 0 0 2rem 0; font-weight: 300; letter-spacing: 0.5px; text-align: center;">
           Celebrating Excellence in the Wixcelo Community
