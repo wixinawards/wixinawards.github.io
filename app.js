@@ -139,8 +139,12 @@ class App {
         const scrollProgress = Math.min(scrollY / 400, 1);
         // Scale from 1 (100%) down to 0.5 (50%)
         const titleScale = Math.max(0.5, 1 - scrollProgress * 0.5);
+        const opacity = Math.max(0.3, 1 - scrollProgress * 0.7);
+        
+        // Apply both scale and opacity directly
         heroTitle.style.transform = `scale(${titleScale})`;
-        heroTitle.style.opacity = Math.max(0.3, 1 - scrollProgress * 0.7);
+        heroTitle.style.opacity = opacity;
+        console.log('Title scale:', titleScale, 'Opacity:', opacity, 'ScrollY:', scrollY); // Debug log
       }
 
       // Award cards - MUCH SLOWER effects that last longer
