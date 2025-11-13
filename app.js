@@ -125,7 +125,13 @@ class App {
     
     console.log('Parallax setup - element exists:', !!document.getElementById('heroTitle'));
     
+    let scrollCount = 0;
     window.addEventListener('scroll', () => {
+      scrollCount++;
+      if (scrollCount % 10 === 0) {
+        console.log('Scroll event fired, count:', scrollCount);
+      }
+      
       const scrollY = window.scrollY;
       const heroSection = document.getElementById('heroSection');
       const heroTitle = document.getElementById('heroTitle');
@@ -138,15 +144,27 @@ class App {
 
       // Title scaling - shrinks as you scroll away
       if (heroTitle) {
+        let newSize = '4rem';
+        let newOpacity = '1';
+        
         if (scrollY < 100) {
-          heroTitle.style.fontSize = '4rem';
-          heroTitle.style.opacity = '1';
+          newSize = '4rem';
+          newOpacity = '1';
         } else if (scrollY < 300) {
-          heroTitle.style.fontSize = '2.5rem';
-          heroTitle.style.opacity = '0.7';
+          newSize = '2.5rem';
+          newOpacity = '0.7';
         } else {
-          heroTitle.style.fontSize = '1.5rem';
-          heroTitle.style.opacity = '0.4';
+          newSize = '1.5rem';
+          newOpacity = '0.4';
+        }
+        
+        // Apply changes
+        heroTitle.style.fontSize = newSize;
+        heroTitle.style.opacity = newOpacity;
+        
+        // Log every 50px of scroll
+        if (scrollY % 50 === 0) {
+          console.log('ScrollY:', scrollY, 'Size:', newSize, 'Opacity:', newOpacity);
         }
       }
 
