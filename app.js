@@ -193,7 +193,7 @@ class App {
       <nav>
         <div class="container">
           <div class="logo-section">
-            <div style="font-size: 2rem;">🏆</div>
+            <img src="image.png" style="height: 2rem; width: auto; filter: drop-shadow(0 4px 8px rgba(239, 68, 68, 0.4));" alt="Logo">
             <div class="logo-text">
               <h1>WIXIN AWARDS</h1>
               <p>Annual Community Celebration</p>

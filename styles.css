@@ -107,6 +107,10 @@ nav {
   font-size: 1.5rem;
 }
 
+.logo-section img {
+  filter: hue-rotate(0deg) saturate(2) brightness(1.2);
+}
+
 .logo-text h1 {
   font-size: 1.5rem;
   font-weight: 900;
