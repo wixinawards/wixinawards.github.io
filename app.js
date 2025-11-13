@@ -123,87 +123,24 @@ class App {
     // Disable parallax on mobile for better performance
     if (window.innerWidth < 768) return;
     
-    console.log('Parallax setup - element exists:', !!document.getElementById('heroTitle'));
+    console.log('Parallax setup - page height:', document.body.scrollHeight, 'window height:', window.innerHeight);
     
-    let scrollCount = 0;
     window.addEventListener('scroll', () => {
-      scrollCount++;
-      if (scrollCount % 10 === 0) {
-        console.log('Scroll event fired, count:', scrollCount);
-      }
-      
       const scrollY = window.scrollY;
-      const heroSection = document.getElementById('heroSection');
       const heroTitle = document.getElementById('heroTitle');
       
-      if (heroSection) {
-        // Hero: MUCH SLOWER floating effect (0.15 instead of 0.4)
-        const heroLift = scrollY * 0.15;
-        heroSection.style.transform = `translateY(-${heroLift}px)`;
-      }
-
-      // Title scaling - shrinks as you scroll away
+      // Simple visual test - change color instead of size
       if (heroTitle) {
-        let newSize = '4rem';
-        let newOpacity = '1';
-        
         if (scrollY < 100) {
-          newSize = '4rem';
-          newOpacity = '1';
-        } else if (scrollY < 300) {
-          newSize = '2.5rem';
-          newOpacity = '0.7';
+          heroTitle.style.color = 'rgba(234, 179, 8, 1)'; // Gold
+        } else if (scrollY < 200) {
+          heroTitle.style.color = 'rgba(239, 68, 68, 0.9)'; // Red
         } else {
-          newSize = '1.5rem';
-          newOpacity = '0.4';
+          heroTitle.style.color = 'rgba(156, 163, 175, 1)'; // Gray
         }
         
-        // Apply changes
-        heroTitle.style.fontSize = newSize;
-        heroTitle.style.opacity = newOpacity;
-        
-        // Log every 50px of scroll
-        if (scrollY % 50 === 0) {
-          console.log('ScrollY:', scrollY, 'Size:', newSize, 'Opacity:', newOpacity);
-        }
+        console.log('ScrollY:', scrollY, 'Color changed');
       }
-
-      // Award cards - MUCH SLOWER effects that last longer
-      const cards = document.querySelectorAll('[data-card-index]');
-      cards.forEach((card, index) => {
-        const rect = card.getBoundingClientRect();
-        
-        // When card enters viewport, apply effects
-        if (rect.top < window.innerHeight && rect.bottom > 0) {
-          // Calculate visibility (0 at top/bottom, 1 in center)
-          const cardCenter = rect.top + rect.height / 2;
-          const distFromCenter = Math.abs(cardCenter - window.innerHeight / 2);
-          const visibility = Math.max(0, 1 - (distFromCenter / (window.innerHeight / 2)));
-          
-          // 1. FLOATING - SLOW upward movement (0.08 instead of 0.3)
-          const float = scrollY * 0.08;
-          
-          // 2. SCALING - Gets bigger as you scroll past it (reduced from 0.25)
-          const scale = 1 + visibility * 0.15;
-          
-          // 3. ROTATION - SLOW spin (0.15 instead of 0.5 - 3x slower)
-          const rotation = scrollY * 0.15;
-          
-          // 4. TILT - 3D perspective tilt
-          const tilt = (visibility - 0.5) * 12;
-          
-          // Apply transforms
-          card.style.transform = `
-            translateY(${float}px)
-            scale(${scale})
-            rotateZ(${rotation}deg)
-            rotateX(${tilt}deg)
-          `;
-          
-          // 5. OPACITY - Subtle fade effect
-          card.style.opacity = Math.min(1, 0.8 + visibility * 0.2);
-        }
-      });
     }, { passive: true });
   }
 
@@ -223,6 +160,7 @@ class App {
   }
 
   render() {
+    console.log('RENDER called');
     const currentYearData = this.allData[this.selectedYear] || { categories: [], eventDate: 'TBA' };
     const years = Object.keys(this.allData || {}).filter(key => /^\d{4}$/.test(key)).sort().reverse();
 
@@ -290,9 +228,8 @@ class App {
             <div style="font-size: 6rem; filter: drop-shadow(0 8px 16px rgba(239, 68, 68, 0.4));">🏆</div>
           </div>
         </div>
-
-        <!-- Title Section - Scales independently -->
-        <h1 id="heroTitle" style="font-size: 4rem; font-weight: 900; color: rgba(234, 179, 8, 1); text-align: center; margin: 0 0 0.75rem 0; letter-spacing: -1px; transform-origin: center top; transition: transform 0.05s linear, opacity 0.05s linear;">
+        <!-- Title Section - Scales independently and becomes sticky -->
+        <h1 id="heroTitle" style="font-size: 4rem; font-weight: 900; color: rgba(234, 179, 8, 1); text-align: center; margin: 0 0 0.75rem 0; letter-spacing: -1px; transform-origin: center center; transition: transform 0.05s linear, opacity 0.05s linear; will-change: transform, position;">
           ${this.selectedYear} Awards
         </h1>
         
@@ -394,10 +331,10 @@ class App {
                       class="form-input"
                       placeholder="One per line"
                       style="min-height: 100px;"
-                    >${category.nominees.join('\n')}</textarea>
+                    >${(category.nominees || []).join('\n')}</textarea>
                   ` : `
                     <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
-                      ${category.nominees.map(nominee => `
+                      ${(category.nominees || []).map(nominee => `
                         <li style="font-size: 0.9rem; color: rgba(229, 231, 235, 0.8);" data-markdown>
                           ${nominee}
                         </li>
@@ -453,6 +390,7 @@ class App {
     `;
 
     document.getElementById('app').innerHTML = html;
+    console.log('RENDER complete - heroTitle exists:', !!document.getElementById('heroTitle'));
     
     // Parse markdown links after rendering
     document.querySelectorAll('[data-markdown]').forEach(el => {
