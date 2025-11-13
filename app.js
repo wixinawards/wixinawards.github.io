@@ -255,8 +255,8 @@ class App {
             </div>
             <div style="width: 1px; background: rgba(239, 68, 68, 0.3);"></div>
             <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-              <p style="font-size: 0.875rem; color: rgba(229, 231, 235, 0.6); text-transform: uppercase; letter-spacing: 1px; margin: 0;">Hosted By</p>
-              <p style="font-size: 1.5rem; color: rgba(234, 179, 8, 1); font-weight: bold; margin: 0;">Wixcelo</p>
+              <p style="font-size: 0.875rem; color: rgba(229, 231, 235, 0.6); text-transform: uppercase; letter-spacing: 1px; margin: 0;">Co-Hosted By</p>
+              <p style="font-size: 1.5rem; color: rgba(234, 179, 8, 1); font-weight: bold; margin: 0;">Wixcelo & Muzwt</p>
             </div>
           </div>
 
