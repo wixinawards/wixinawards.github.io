@@ -22,7 +22,7 @@ const auth = getAuth(app);
 await signInAnonymously(auth);
 
 // Local password validation (no CORS issues)
-const ADMIN_PASSWORD = "wixinrocks2025"; // Change this to your desired password
+const ADMIN_PASSWORD = "wixin4eva"; // Change this to your desired password
 
 export async function initializeData(defaultData) {
   const dataRef = ref(database, 'awards');

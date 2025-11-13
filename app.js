@@ -2,6 +2,11 @@
 import { initializeData, loadData } from './firebase.js';
 import { AdminManager } from './admin.js';
 
+// Markdown link parser - converts [text](url) to HTML links
+function parseMarkdownLinks(text) {
+  return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+
 const defaultData = {
   '2024': {
     eventDate: 'December 20, 2024',
@@ -224,119 +229,141 @@ class App {
       <div class="content">
         <!-- Trophy at Top -->
         <div class="trophy-container">
-          <div style="font-size: 8rem;">🏆</div>
+          <div style="font-size: 8rem; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));">🏆</div>
         </div>
 
         <!-- Hero Section -->
         <div class="hero">
           <h2>${this.selectedYear} Wixin Awards</h2>
-          <p>Celebrating the Wixcelo Community</p>
-          <div class="hero-info">
-            <div class="hero-info-item">
-              <svg class="hero-info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-              </svg>
-              <span>${currentYearData.eventDate}</span>
+          <p>Celebrating Excellence in the Wixcelo Community</p>
+        </div>
+
+        <!-- Event Info Bar -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 3rem; padding: 1.5rem; background: rgba(0, 0, 0, 0.3); border-radius: 0.75rem; border-left: 4px solid rgba(239, 68, 68, 0.8);">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <svg style="width: 1.5rem; height: 1.5rem; color: rgba(239, 68, 68, 0.8);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <div>
+              <p style="font-size: 0.875rem; color: rgba(229, 231, 235, 0.7); margin-bottom: 0.25rem;">Event Date</p>
+              <p style="color: rgba(234, 179, 8, 1); font-weight: bold;">${currentYearData.eventDate}</p>
             </div>
-            <div class="hero-info-item">
-              <span style="color: #dc2626; font-size: 1.25rem;">▶️</span>
-              <span>Hosted by Wixcelo</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.5rem;">▶️</span>
+            <div>
+              <p style="font-size: 0.875rem; color: rgba(229, 231, 235, 0.7); margin-bottom: 0.25rem;">Hosted By</p>
+              <p style="color: rgba(234, 179, 8, 1); font-weight: bold;">Wixcelo</p>
             </div>
           </div>
         </div>
 
-        ${this.adminManager.isAdmin ? `
-        <div class="admin-dashboard">
-          <div class="admin-dashboard-header">
-            <h3>Admin Dashboard</h3>
-            <button class="btn btn-primary" onclick="addCategory()">
-              + Add Category
+        <!-- Winners Section Header -->
+        <div style="margin-top: 4rem; margin-bottom: 2.5rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <h2 style="font-size: 2rem; font-weight: bold; color: rgba(234, 179, 8, 1);">🏅 ${this.selectedYear} Winners</h2>
+            ${this.adminManager.isAdmin ? `
+            <button class="btn btn-primary" onclick="addCategory()" style="margin: 0;">
+              + Add Award
             </button>
+            ` : ''}
           </div>
-          <p>Edit categories, winners, and nominees for ${this.selectedYear}</p>
+          <div style="height: 2px; background: linear-gradient(90deg, rgba(239, 68, 68, 0.8), transparent); border-radius: 1px;"></div>
+        </div>
+
+        ${this.adminManager.isAdmin ? `
+        <div class="admin-dashboard" style="margin-bottom: 2rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; color: rgba(239, 68, 68, 0.8);">
+            <span style="font-size: 1.25rem;">⚙️</span>
+            <p style="margin: 0; color: rgba(229, 231, 235, 0.8);">You are in <strong>Admin Mode</strong> for ${this.selectedYear}</p>
+          </div>
         </div>
         ` : ''}
 
         <!-- Winners Grid -->
-        <div>
-          <h3 style="text-align: center; font-size: 2.25rem; font-weight: bold; color: rgb(234, 179, 8); margin-bottom: 2rem;">
-            ${this.selectedYear} Winners
-          </h3>
-          <div class="winners-grid">
-            ${currentYearData.categories.map((category, idx) => `
-              <div class="winner-card">
-                ${this.adminManager.isAdmin ? `
-                <button class="btn btn-danger" style="position: absolute; top: 1rem; right: 1rem; width: auto; padding: 0.5rem;" onclick="deleteCategory(${idx})">
-                  ✕
-                </button>
-                ` : ''}
-                <div class="winner-card-icon">${category.icon}</div>
+        <div class="winners-grid">
+          ${currentYearData.categories.map((category, idx) => `
+            <div class="winner-card">
+              ${this.adminManager.isAdmin ? `
+              <button class="btn btn-danger" style="position: absolute; top: 1rem; right: 1rem; width: auto; padding: 0.5rem;" onclick="deleteCategory(${idx})">
+                ✕
+              </button>
+              ` : ''}
+              
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <span style="font-size: 2.5rem;">${category.icon}</span>
                 ${this.adminManager.isAdmin && this.adminManager.editingCategory === idx ? `
                   <input
                     type="text"
                     value="${category.name}"
                     onchange="updateCategoryName(${idx}, this.value)"
                     class="form-input"
+                    placeholder="Award name"
+                    style="flex: 1;"
                   />
                 ` : `
-                  <h3 class="winner-card">${category.name}</h3>
+                  <h3 style="margin: 0; font-size: 1.125rem; font-weight: bold; color: white;" data-markdown>${category.name}</h3>
                 `}
-                
-                <div class="winner-card-section">
-                  <p class="winner-card-label">🏆 WINNER</p>
-                  ${this.adminManager.isAdmin && this.adminManager.editingCategory === idx ? `
-                    <input
-                      type="text"
-                      value="${category.winner}"
-                      onchange="updateWinner(${idx}, this.value)"
-                      class="form-input"
-                    />
-                  ` : `
-                    <p class="winner-card-winner">${category.winner}</p>
-                  `}
-                </div>
-
-                <div class="winner-card-section">
-                  <p class="winner-card-label">Nominees:</p>
-                  ${this.adminManager.isAdmin && this.adminManager.editingCategory === idx ? `
-                    <textarea
-                      onchange="updateNominees(${idx}, this.value)"
-                      placeholder="One nominee per line"
-                      style="min-height: 100px;"
-                    >${category.nominees.join('\n')}</textarea>
-                  ` : `
-                    <ul class="winner-card-nominees">
-                      ${category.nominees.map(nominee => `
-                        <li>${nominee}</li>
-                      `).join('')}
-                    </ul>
-                  `}
-                </div>
-
-                ${this.adminManager.isAdmin ? `
-                <button
-                  class="btn btn-secondary"
-                  style="width: 100%; margin-top: 1rem;"
-                  onclick="toggleEdit(${idx})"
-                >
-                  ${this.adminManager.editingCategory === idx ? '✓ Done' : '✎ Edit'}
-                </button>
-                ` : ''}
               </div>
-            `).join('')}
-          </div>
+              
+              <div style="padding: 1rem; background: rgba(0, 0, 0, 0.4); border-radius: 0.5rem; margin-bottom: 1rem;">
+                <p style="font-size: 0.75rem; color: rgba(239, 68, 68, 0.8); margin: 0 0 0.5rem 0; font-weight: 600;">🏆 WINNER</p>
+                ${this.adminManager.isAdmin && this.adminManager.editingCategory === idx ? `
+                  <input
+                    type="text"
+                    value="${category.winner}"
+                    onchange="updateWinner(${idx}, this.value)"
+                    class="form-input"
+                    placeholder="Nominee name or [Link Text](URL)"
+                  />
+                ` : `
+                  <p style="margin: 0; font-size: 1.125rem; font-weight: bold; color: rgba(234, 179, 8, 1);" data-markdown>${category.winner}</p>
+                `}
+              </div>
+
+              <div style="margin-bottom: 1rem;">
+                <p style="font-size: 0.75rem; color: rgba(229, 231, 235, 0.7); margin: 0 0 0.5rem 0; font-weight: 600;">Nominees</p>
+                ${this.adminManager.isAdmin && this.adminManager.editingCategory === idx ? `
+                  <textarea
+                    onchange="updateNominees(${idx}, this.value)"
+                    class="form-input"
+                    placeholder="One nominee per line (supports [Link](URL))"
+                    style="min-height: 100px; resize: vertical;"
+                  >${category.nominees.join('\n')}</textarea>
+                ` : `
+                  <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.5rem;">
+                    ${category.nominees.map(nominee => `
+                      <li style="font-size: 0.875rem; color: rgba(229, 231, 235, 0.8); display: flex; align-items: center; gap: 0.5rem;" data-markdown-item>
+                        <span style="color: rgba(239, 68, 68, 0.6);">▸</span>
+                        <span data-markdown>${nominee}</span>
+                      </li>
+                    `).join('')}
+                  </ul>
+                `}
+              </div>
+
+              ${this.adminManager.isAdmin ? `
+              <button
+                class="btn btn-secondary"
+                style="width: 100%; margin-top: 1rem;"
+                onclick="toggleEdit(${idx})"
+              >
+                ${this.adminManager.editingCategory === idx ? '✓ Done Editing' : '✏️ Edit'}
+              </button>
+              ` : ''}
+            </div>
+          `).join('')}
         </div>
 
         <!-- Community Section -->
-        <div class="community-section">
-          <h3>Join the Wixcelo Community!</h3>
-          <p>Be part of the most creative Minecraft community</p>
-          <button class="btn btn-primary">
-            <svg class="hero-info-icon" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path>
-            </svg>
-            Subscribe to Wixcelo
-          </button>
+        <div style="margin-top: 5rem; padding: 3rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1)); border: 2px solid rgba(239, 68, 68, 0.4); border-radius: 1.5rem; text-align: center;">
+          <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎮</div>
+          <h2 style="font-size: 2rem; color: rgba(234, 179, 8, 1); margin-bottom: 0.75rem;">Join the Wixcelo Community</h2>
+          <p style="font-size: 1.125rem; color: rgba(229, 231, 235, 0.8); margin-bottom: 2rem;">Experience one of Minecraft's most creative and welcoming communities</p>
+          <a href="https://www.youtube.com/@WixceloMC" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 2rem; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 0.75rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease; text-decoration: none;">
+            <span style="font-size: 1.25rem;">▶️</span>
+            Subscribe on YouTube
+          </a>
         </div>
       </div>
 
@@ -344,7 +371,7 @@ class App {
       <footer>
         <div class="container">
           <p>© ${this.selectedYear} Wixin Awards - Wixcelo Community</p>
-          <p class="copyright">Not affiliated with Mojang Studios or Microsoft</p>
+          <p class="copyright">Made with ❤️ for the Wixcelo Community</p>
         </div>
       </footer>
 
@@ -359,6 +386,11 @@ class App {
     `;
 
     document.getElementById('app').innerHTML = html;
+    
+    // Parse markdown links after rendering
+    document.querySelectorAll('[data-markdown]').forEach(el => {
+      el.innerHTML = parseMarkdownLinks(el.textContent);
+    });
   }
 
   toggleYearDropdown() {
