@@ -119,38 +119,56 @@ class App {
   }
 
   setupParallax() {
+    // Disable parallax on mobile for better performance
+    if (window.innerWidth < 768) return;
+    
     window.addEventListener('scroll', () => {
       const scrollY = window.scrollY;
       const heroSection = document.getElementById('heroSection');
-      const trophy = document.querySelector('.trophy-container');
-      const parallaxBg = document.getElementById('carousel-container');
-      
-      if (parallaxBg) {
-        // Background parallax - bigger movement
-        parallaxBg.style.transform = `translateY(${scrollY * 0.8}px) scale(${1 + scrollY * 0.001})`;
-      }
       
       if (heroSection) {
-        // Hero parallax effect - bigger movement (was 0.3, now 0.5)
-        heroSection.style.transform = `translateY(${scrollY * 0.5}px)`;
-      }
-      
-      if (trophy) {
-        // Trophy moves up and scales - more dramatic
-        const trophyMove = scrollY * 0.6;
-        const trophyScale = Math.min(1.5, 1 + scrollY * 0.0015);
-        trophy.style.transform = `translateY(-${trophyMove}px) scale(${trophyScale})`;
+        // Hero: Simple but visible floating effect
+        const heroLift = scrollY * 0.4;
+        heroSection.style.transform = `translateY(-${heroLift}px)`;
       }
 
-      // Award cards parallax effect - bigger movement (was 20, now 50)
+      // Award cards - Simplified but VERY VISIBLE effects
       const cards = document.querySelectorAll('[data-card-index]');
-      cards.forEach((card) => {
+      cards.forEach((card, index) => {
         const rect = card.getBoundingClientRect();
-        const scrollProgress = (window.innerHeight - rect.top) / window.innerHeight;
-        const parallaxAmount = (scrollProgress - 0.5) * 50;
-        card.style.transform = `translateY(${parallaxAmount}px)`;
+        
+        // When card enters viewport, apply effects
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+          // Calculate visibility (0 at top/bottom, 1 in center)
+          const cardCenter = rect.top + rect.height / 2;
+          const distFromCenter = Math.abs(cardCenter - window.innerHeight / 2);
+          const visibility = Math.max(0, 1 - (distFromCenter / (window.innerHeight / 2)));
+          
+          // 1. FLOATING - Moves up significantly
+          const float = scrollY * 0.3;
+          
+          // 2. SCALING - Gets bigger as you scroll past it
+          const scale = 1 + visibility * 0.25;
+          
+          // 3. ROTATION - Spins as you scroll
+          const rotation = scrollY * 0.5;
+          
+          // 4. TILT - 3D perspective tilt
+          const tilt = (visibility - 0.5) * 20;
+          
+          // Apply transforms
+          card.style.transform = `
+            translateY(${float}px)
+            scale(${scale})
+            rotateZ(${rotation}deg)
+            rotateX(${tilt}deg)
+          `;
+          
+          // 5. OPACITY - Fade effect
+          card.style.opacity = Math.min(1, 0.7 + visibility * 0.3);
+        }
       });
-    });
+    }, { passive: true });
   }
 
   setupEventListeners() {
