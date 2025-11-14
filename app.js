@@ -2,9 +2,83 @@
 import { initializeData, loadData } from './firebase.js';
 import { AdminManager } from './admin.js';
 
-// Markdown link parser - converts [text](url) to HTML links
+// Markdown link parser with click handler - converts [text](url) to HTML links
 function parseMarkdownLinks(text) {
-  return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" data-link="true" class="markdown-link">$1</a>');
+}
+
+// Link preview modal manager
+class LinkPreviewModal {
+  constructor(app) {
+    this.app = app; // Store reference to app
+    this.currentUrl = null;
+    this.dragOffsetX = 0;
+    this.dragOffsetY = 0;
+    this.isDragging = false;
+  }
+
+  open(url, linkText) {
+    const modal = document.getElementById('linkPreviewModal');
+    if (!modal) return;
+
+    this.currentUrl = url;
+    
+    // Set iframe and button
+    const iframe = modal.querySelector('iframe');
+    const openBtn = modal.querySelector('.link-open-button');
+    
+    iframe.src = url;
+    openBtn.href = url;
+    openBtn.target = '_blank';
+    
+    modal.classList.remove('hidden');
+    modal.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) scale(1)';
+    
+    // Setup drag functionality
+    this.setupDragHandling(modal);
+  }
+
+  setupDragHandling(modal) {
+  const header = modal.querySelector('.link-modal-header');
+  
+  header.addEventListener('mousedown', (e) => {
+    this.isDragging = true;
+    this.dragOffsetX = e.clientX - modal.offsetLeft;
+    this.dragOffsetY = e.clientY - modal.offsetTop;
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!this.isDragging) return;
+    
+    modal.style.left = (e.clientX - this.dragOffsetX) + 'px';
+    modal.style.top = (e.clientY - this.dragOffsetY) + 'px';
+    
+    // Only add 3D tilt effect if NOT in admin mode
+    if (!this.app.adminManager.isAdmin) {
+      const centerX = modal.offsetLeft + modal.offsetWidth / 2;
+      const centerY = modal.offsetTop + modal.offsetHeight / 2;
+      const angleX = (e.clientY - centerY) * 0.02;
+      const angleY = (e.clientX - centerX) * -0.02;
+      
+      modal.style.transform = `perspective(1200px) rotateX(${angleX}deg) rotateY(${angleY}deg) scale(1)`;
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    this.isDragging = false;
+    // Only reset transform if NOT in admin mode
+    if (!this.app.adminManager.isAdmin) {
+      modal.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) scale(1)';
+    }
+  });
+}
+
+  close() {
+    const modal = document.getElementById('linkPreviewModal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  }
 }
 
 const defaultData = {
@@ -103,6 +177,9 @@ class App {
     this.selectedYear = '2025';
     this.adminManager = new AdminManager();
     this.allData = null;
+    this.linkModal = new LinkPreviewModal(this); // Pass 'this' reference
+    this.draggedElement = null;
+    this.draggedIndex = null;
   }
 
   async init() {
@@ -115,40 +192,108 @@ class App {
     this.allData = data;
     this.adminManager.setCurrentData(data);
     this.render();
-    // Setup parallax AFTER render so elements exist
     this.setupParallax();
+    this.setupLinkHandlers();
+  }
+
+  setupLinkHandlers() {
+    document.querySelectorAll('.markdown-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = link.getAttribute('href');
+        const text = link.textContent;
+        this.linkModal.open(url, text);
+      });
+    });
+  }
+
+  setupDragToReorder() {
+    if (!this.adminManager.isAdmin) return;
+
+    const cards = document.querySelectorAll('[data-card-index]');
+    
+    cards.forEach(card => {
+      card.draggable = true;
+      
+      card.addEventListener('dragstart', (e) => {
+        this.draggedElement = card;
+        this.draggedIndex = parseInt(card.getAttribute('data-card-index'));
+        card.style.opacity = '0.5';
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      card.addEventListener('dragend', () => {
+        card.style.opacity = '1';
+      });
+
+      card.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        card.style.borderTop = '3px solid var(--gold)';
+      });
+
+      card.addEventListener('dragleave', () => {
+        card.style.borderTop = 'none';
+      });
+
+      card.addEventListener('drop', (e) => {
+        e.preventDefault();
+        card.style.borderTop = 'none';
+        
+        if (!this.draggedElement || this.draggedElement === card) return;
+
+        const newIndex = parseInt(card.getAttribute('data-card-index'));
+        this.reorderCategories(this.draggedIndex, newIndex);
+      });
+    });
+  }
+
+  async reorderCategories(fromIndex, toIndex) {
+    try {
+      const yearData = this.allData[this.selectedYear];
+      const [movedCategory] = yearData.categories.splice(fromIndex, 1);
+      yearData.categories.splice(toIndex, 0, movedCategory);
+      
+      await this.adminManager.saveChanges(this.allData);
+    } catch (error) {
+      alert('Error reordering: ' + error.message);
+      this.render();
+    }
   }
 
   setupParallax() {
-    // Disable parallax on mobile for better performance
-    if (window.innerWidth < 768) return;
+  // Disable parallax on mobile for better performance
+  if (window.innerWidth < 768) return;
+  
+  // Disable parallax in admin mode
+  if (this.adminManager.isAdmin) return;
+  
+  console.log('Parallax setup - page height:', document.body.scrollHeight, 'window height:', window.innerHeight);
+  
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    const heroTitle = document.getElementById('heroTitle');
     
-    console.log('Parallax setup - page height:', document.body.scrollHeight, 'window height:', window.innerHeight);
-    
-    window.addEventListener('scroll', () => {
-      const scrollY = window.scrollY;
-      const heroTitle = document.getElementById('heroTitle');
-      
-      // Simple visual test - change color instead of size
-      if (heroTitle) {
-        if (scrollY < 100) {
-          heroTitle.style.color = 'rgba(234, 179, 8, 1)'; // Gold
-        } else if (scrollY < 200) {
-          heroTitle.style.color = 'rgba(239, 68, 68, 0.9)'; // Red
-        } else {
-          heroTitle.style.color = 'rgba(156, 163, 175, 1)'; // Gray
-        }
-        
-        console.log('ScrollY:', scrollY, 'Color changed');
+    // Simple visual test - change color instead of size
+    if (heroTitle) {
+      if (scrollY < 100) {
+        heroTitle.style.color = 'rgba(234, 179, 8, 1)'; // Gold
+      } else if (scrollY < 200) {
+        heroTitle.style.color = 'rgba(239, 68, 68, 0.9)'; // Red
+      } else {
+        heroTitle.style.color = 'rgba(156, 163, 175, 1)'; // Gray
       }
-    }, { passive: true });
-  }
-
+      
+      console.log('ScrollY:', scrollY, 'Color changed');
+    }
+  }, { passive: true });
+}
   setupEventListeners() {
     window.toggleAdmin = () => this.toggleAdmin();
     window.toggleYearDropdown = () => this.toggleYearDropdown();
     window.selectYear = (year) => this.selectYear(year);
     window.closePasswordModal = () => this.closePasswordModal();
+    window.closeLinkPreview = () => this.linkModal.close();
     window.handlePasswordSubmit = (e) => this.handlePasswordSubmit(e);
     window.toggleEdit = (idx) => this.toggleEdit(idx);
     window.updateCategoryName = (idx, value) => this.updateCategoryName(idx, value);
@@ -183,6 +328,26 @@ class App {
               Enter Admin Mode
             </button>
           </form>
+        </div>
+      </div>
+
+      <!-- Link Preview Modal -->
+      <div id="linkPreviewModal" class="link-preview-modal hidden">
+        <div class="link-modal-content">
+          <div class="link-modal-header">
+            <div class="link-modal-controls">
+              <button class="link-nav-btn" title="Previous">‹</button>
+              <span class="link-modal-title">Preview</span>
+              <button class="link-nav-btn" title="Next">›</button>
+            </div>
+            <button class="link-modal-close" onclick="closeLinkPreview()">✕</button>
+          </div>
+          <div class="link-modal-body">
+            <iframe frameborder="0" sandbox="allow-same-origin allow-scripts"></iframe>
+          </div>
+          <div class="link-modal-footer">
+            <a class="link-open-button btn btn-primary" target="_blank">Open in New Tab</a>
+          </div>
         </div>
       </div>
 
@@ -280,7 +445,7 @@ class App {
           
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 2rem;" id="awardsGrid">
             ${currentYearData.categories.map((category, idx) => `
-              <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08)); backdrop-filter: blur(10px); border: 2px solid rgba(239, 68, 68, 0.4); border-radius: 1.25rem; padding: 2rem; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;" class="award-card-premium" data-card-index="${idx}">
+              <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.08)); backdrop-filter: blur(10px); border: 2px solid rgba(239, 68, 68, 0.4); border-radius: 1.25rem; padding: 2rem; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;" class="award-card-premium ${this.adminManager.isAdmin ? 'admin-mode' : ''}" data-card-index="${idx}">
                 <div style="position: absolute; top: 0; right: 0; width: 100px; height: 100px; background: radial-gradient(circle, rgba(239, 68, 68, 0.1), transparent); border-radius: 0 0 0 100%;"></div>
                 
                 ${this.adminManager.isAdmin ? `
@@ -394,6 +559,10 @@ class App {
     document.querySelectorAll('[data-markdown]').forEach(el => {
       el.innerHTML = parseMarkdownLinks(el.textContent);
     });
+
+    // Setup link handlers and drag-to-reorder
+    this.setupLinkHandlers();
+    this.setupDragToReorder();
   }
 
   toggleYearDropdown() {
@@ -412,17 +581,18 @@ class App {
     this.render();
   }
 
-  toggleAdmin() {
-    if (this.adminManager.isAdmin) {
-      this.adminManager.logout();
-      this.render();
-    } else {
-      const modal = document.getElementById('passwordModal');
-      if (modal) {
-        modal.classList.remove('hidden');
-      }
+toggleAdmin() {
+  if (this.adminManager.isAdmin) {
+    this.adminManager.logout();
+    this.render();
+    this.setupParallax(); // Re-enable parallax after logout
+  } else {
+    const modal = document.getElementById('passwordModal');
+    if (modal) {
+      modal.classList.remove('hidden');
     }
   }
+}
 
   closePasswordModal() {
     const modal = document.getElementById('passwordModal');
@@ -432,22 +602,23 @@ class App {
   }
 
   async handlePasswordSubmit(e) {
-    e.preventDefault();
-    const password = document.getElementById('passwordInput').value;
-    
-    try {
-      const result = await this.adminManager.login(password);
-      if (result.success) {
-        this.closePasswordModal();
-        this.render();
-      } else {
-        alert(result.error || 'Incorrect password');
-        document.getElementById('passwordInput').value = '';
-      }
-    } catch (error) {
-      alert('Error: ' + error.message);
+  e.preventDefault();
+  const password = document.getElementById('passwordInput').value;
+  
+  try {
+    const result = await this.adminManager.login(password);
+    if (result.success) {
+      this.closePasswordModal();
+      this.render();
+      this.setupParallax(); // Disable parallax after login
+    } else {
+      alert(result.error || 'Incorrect password');
+      document.getElementById('passwordInput').value = '';
     }
+  } catch (error) {
+    alert('Error: ' + error.message);
   }
+}
 
   toggleEdit(idx) {
     this.adminManager.toggleEditCategory(idx);

@@ -1,7 +1,7 @@
 // Firebase configuration and initialization
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getDatabase, ref, set, get, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDykhdH96mZu4-8Z0gWRwdKClY0143Ky2Q",
@@ -19,16 +19,27 @@ const database = getDatabase(app);
 const auth = getAuth(app);
 
 // Sign in anonymously for read access
-await signInAnonymously(auth);
+let currentUser = null;
+try {
+  const userCredential = await signInAnonymously(auth);
+  currentUser = userCredential.user;
+} catch (error) {
+  console.error('Anonymous sign-in failed:', error);
+}
 
-// Local password validation (no CORS issues)
-const ADMIN_PASSWORD = "wixin4eva"; // Change this to your desired password
+// Admin password stored in Firebase
+const ADMIN_PASSWORD_PATH = 'admin/password';
 
 export async function initializeData(defaultData) {
   const dataRef = ref(database, 'awards');
-  const snapshot = await get(dataRef);
-  if (!snapshot.exists()) {
-    await set(dataRef, defaultData);
+  try {
+    const snapshot = await get(dataRef);
+    if (!snapshot.exists()) {
+      await set(dataRef, defaultData);
+    }
+  } catch (error) {
+    console.error('Error initializing data:', error);
+    throw error;
   }
 }
 
@@ -37,11 +48,14 @@ export function loadData(callback) {
   onValue(dataRef, (snapshot) => {
     const data = snapshot.val();
     callback(data);
+  }, (error) => {
+    console.error('Error loading data:', error);
+    callback(null);
   });
 }
 
 export async function saveData(data, adminToken) {
-  if (!adminToken) {
+  if (!adminToken || !adminToken.isAdmin) {
     throw new Error('You must be logged in as admin to make changes');
   }
 
@@ -51,17 +65,69 @@ export async function saveData(data, adminToken) {
     return { success: true };
   } catch (error) {
     console.error('Error saving data:', error);
+    if (error.code === 'PERMISSION_DENIED') {
+      throw new Error('Permission denied. Admin access required.');
+    }
     throw error;
   }
 }
 
 export async function validatePassword(password) {
-  // Simple local validation (no CORS issues)
-  if (password === ADMIN_PASSWORD) {
+  try {
+    // Check password against Firebase
+    const passwordRef = ref(database, ADMIN_PASSWORD_PATH);
+    const snapshot = await get(passwordRef);
+    
+    if (!snapshot.exists()) {
+      // Initialize password if it doesn't exist (first time setup)
+      // You'll need to manually set this in Firebase Console initially
+      return { 
+        success: false, 
+        error: 'Admin password not configured. Please set it in Firebase Console at admin/password' 
+      };
+    }
+    
+    const storedPassword = snapshot.val();
+    
+    if (password === storedPassword) {
+      const token = {
+        isAdmin: true,
+        timestamp: Date.now(),
+        uid: currentUser?.uid
+      };
+      
+      sessionStorage.setItem('adminToken', JSON.stringify(token));
+      
+      return { 
+        success: true, 
+        token: token
+      };
+    }
+    
     return { 
-      success: true, 
-      token: "admin_" + Date.now() // Generate a simple token
+      success: false, 
+      error: 'Incorrect password' 
+    };
+  } catch (error) {
+    console.error('Error validating password:', error);
+    return { 
+      success: false, 
+      error: 'Error checking password. Make sure Firebase rules allow reading admin/password' 
     };
   }
-  return { success: false, error: 'Incorrect password' };
+}
+
+export function getStoredAdminToken() {
+  const stored = sessionStorage.getItem('adminToken');
+  if (!stored) return null;
+  
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return null;
+  }
+}
+
+export function clearAdminToken() {
+  sessionStorage.removeItem('adminToken');
 }
